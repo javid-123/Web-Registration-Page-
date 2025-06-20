@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Student Registration Actions</title>
+    <style>
+        body {
+            background-color: #f4f4f4;
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        .container {
+            background-color: white;
+            padding: 30px 40px;
+            border-radius: 10px;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+            width: 400px;
+        }
+
+        h2 {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        label {
+            display: block;
+            margin: 15px 0 5px;
+        }
+
+        input[type="text"],
+        input[type="email"],
+        input[type="password"] {
+            width: 100%;
+            padding: 10px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+            background-color: #e9f1ff;
+            box-sizing: border-box;
+        }
+
+        .btn {
+            margin-top: 15px;
+            width: 48%;
+            padding: 10px;
+            font-size: 15px;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .register {
+            background-color: #28a745;
+        }
+
+        .update {
+            background-color: #007bff;
+        }
+
+        .delete {
+            background-color: #dc3545;
+        }
+
+        .get {
+            background-color: #6c757d;
+        }
+
+        .btn:hover {
+            opacity: 0.9;
+        }
+
+        .btn-container {
+            display: flex;
+            justify-content: space-between;
+            flex-wrap: wrap;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h2><strong>Student Registration Actions</strong></h2>
+        <form id="form">
+            <label for="fullname">Full Name</label>
+            <input type="text" id="t1" name="fullname" placeholder="Enter full name" required>
+
+            <label for="email">Email Address</label>
+            <input type="email" id="t2" name="email" placeholder="Enter email" required>
+
+            <label for="username">Username</label>
+            <input type="text" id="t3" name="username" placeholder="Enter username">
+
+            <label for="password">Password</label>
+            <input type="password" id="t4" name="password">
+
+            <label for="confirmpassword">Confirm Password</label>
+            <input type="password" id="t5" name="confirmpassword">
+
+            <div class="btn-container">
+                <button type="button" class="btn register" onclick="add()">Register</button>
+                <button type="button" class="btn update" onclick="updateRecord()">Update</button>
+                <button type="button" class="btn delete" onclick="deleteRecord()">Delete</button>
+                <button type="button" class="btn get" onclick="getRecord()">Get</button>
+            </div>
+        </form>
+    </div>
+
+    <script>
+
+        async function add() {
+    let name = document.getElementById("t1").value.trim();
+    let email = document.getElementById("t2").value.trim();
+    let username = document.getElementById("t3").value.trim();
+    let password = document.getElementById("t4").value.trim();
+    let confirmpassword = document.getElementById("t5").value.trim();
+
+    if (!name || !email || !username || !password || !confirmpassword) {
+        alert("Please fill all the blank fields.");
+        return;
+    }
+
+    if (password !== confirmpassword) {
+        alert("Passwords do not match!");
+        return;
+    }
+
+    let response = await fetch("http://localhost:2000/insert", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, email, username, password, confirmpassword })
+        
+    });
+
+    let receive = await response.json();
+
+    if (response.ok) {
+        alert(receive.message);
+        location.reload();
+    } else {
+        alert(receive.message); // Shows "This email is already registered"
+        location.reload();
+    }
+
+}
+
+    async function getRecord() {
+    let email = document.getElementById("t2").value.trim();
+
+    if (!email) {
+        alert("Please enter an email to search.");
+        return;
+    }
+
+    try {
+        let response = await fetch(`http://localhost:2000/emp/${email}`, {
+            method: "GET",
+            headers: { "Content-Type": "application/json" }
+        });
+
+        if (response.ok) {
+            let data = await response.json();
+
+            // Autofill form
+            document.getElementById("t1").value = data.name;
+            document.getElementById("t3").value = data.username;
+            document.getElementById("t4").value = data.password;
+            document.getElementById("t5").value = data.confirmpassword;
+        } else {
+            // Show message for not found
+            alert("No record found for this email.");
+            document.getElementById("form").reset();
+        }
+    } catch (error) {
+        console.error("Error:", error);
+        alert("Something went wrong while fetching data.");
+    }
+}
+
+async function updateRecord() {
+
+    let name = document.getElementById("t1").value.trim();
+    let email = document.getElementById("t2").value.trim();
+    let username = document.getElementById("t3").value.trim();
+    let password = document.getElementById("t4").value.trim();
+    let confirmpassword = document.getElementById("t5").value.trim();
+
+    if (!name || !email || !username || !password || !confirmpassword) {
+        alert("Please fill all the blank fields.");
+        return;
+    }
+
+    if (password !== confirmpassword) {
+        alert("Passwords do not match!");
+        return;
+    }
+
+    let response = await fetch(`http://localhost:2000/update/${email}`, {
+        method:"PUT",
+        headers:{"Content-Type":"application/json"},
+        body:JSON.stringify({name,email,username,password,confirmpassword})
+
+    })
+
+    let receive = await response.json();
+
+    if (response.ok) {
+        alert(receive.message);
+        location.reload();
+    } else {
+        alert(receive.message); // Shows "This email is not registered"
+        location.reload();
+    }
+}
+
+async function deleteRecord() {
+
+    let email = document.getElementById("t2").value.trim();
+
+    let response= await fetch(`http://localhost:2000/delete/${email}`, {
+        method:"DELETE",
+ 
+
+    })
+    let receive = await response.json()
+
+    if (response.ok) {
+        alert(receive.message);
+        location.reload();
+    } else {
+        alert(receive.message); // Shows "This email is not registered"
+        location.reload();
+    }
+    
+}
+
+
+    </script>
+</body>
+
+</html>
